@@ -155,6 +155,28 @@ func (w *Config) BeginLogin(ctx context.Context, user *domain.Human, userVerific
 	}, nil
 }
 
+// BeginDiscoverableLogin requests a passkey without first selecting its owner.
+func (w *Config) BeginDiscoverableLogin(ctx context.Context, rpID string) (*domain.WebAuthNLogin, error) {
+	server, err := w.serverFromContext(ctx, rpID, "")
+	if err != nil {
+		return nil, err
+	}
+	assertion, sessionData, err := server.BeginDiscoverableLogin(webauthn.WithUserVerification(protocol.VerificationRequired))
+	if err != nil {
+		return nil, zerrors.ThrowInternal(err, "WEBAU-f6W2a", "Errors.User.WebAuthN.BeginLoginFailed")
+	}
+	credentialData, err := json.Marshal(assertion)
+	if err != nil {
+		return nil, zerrors.ThrowInternal(err, "WEBAU-p9O4b", "Errors.User.WebAuthN.MarshalError")
+	}
+	return &domain.WebAuthNLogin{
+		Challenge:               sessionData.Challenge,
+		CredentialAssertionData: credentialData,
+		UserVerification:        domain.UserVerificationRequirementRequired,
+		RPID:                    server.Config.RPID,
+	}, nil
+}
+
 func (w *Config) FinishLogin(ctx context.Context, user *domain.Human, webAuthN *domain.WebAuthNLogin, credData []byte, webAuthNs ...*domain.WebAuthNToken) (*webauthn.Credential, error) {
 	assertionData, err := protocol.ParseCredentialRequestResponseBody(bytes.NewReader(credData))
 	if err != nil {
