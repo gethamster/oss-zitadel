@@ -3,7 +3,14 @@
 This repository preserves Zitadel v4.20.0 at upstream commit
 `8afa5dd37a8e723efb9eace8d09fd5c1cccef694` and its AGPL-3.0 license.
 The System patch adds EdDSA to the API access-token verifier's accepted signing
-algorithms. Zitadel already supports issuing these tokens. Issuer, expiry,
+algorithms. Zitadel already supports issuing these tokens. The `4.20.0-system.2`
+provider also accepts a Session v2 passkey challenge before an account has been
+selected. Its server-issued challenge lets a discoverable passkey identify and
+authenticate its owner in one ceremony. The account is bound only after the
+credential signature and required user verification pass; existing account-bound
+challenges retain their original behavior. No database migration is needed.
+
+Issuer, expiry,
 signature verification and API authorization remain enforced.
 
 Corresponding source, including the patch and regression test, is available at

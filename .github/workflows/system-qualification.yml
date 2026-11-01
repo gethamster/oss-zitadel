@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - internal/authz/**
+      - internal/command/session*
+      - internal/webauthn/**
       - go.mod
       - go.sum
       - .github/workflows/system-qualification.yml
@@ -11,6 +13,8 @@ on:
     branches: [main, codex/eddsa-api-verifier]
     paths:
       - internal/authz/**
+      - internal/command/session*
+      - internal/webauthn/**
       - go.mod
       - go.sum
       - .github/workflows/system-qualification.yml
@@ -44,3 +48,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Verify API token authentication
         run: pnpm nx run @zitadel/api:test-unit --skipNxCache --command='go test -race ./internal/authz/repository/eventsourcing/eventstore -count=1 -v'
+      - name: Verify discoverable passkey authentication
+        run: pnpm nx run @zitadel/api:test-unit --skipNxCache --command='go test -race ./internal/command ./internal/webauthn -run "TestSessionDiscoverablePasskey|TestDiscoverablePasskeyRejectsU2F|TestSessionCommands_getHumanWebAuthNTokens|TestConfig_serverFromContext" -count=1 -v'
