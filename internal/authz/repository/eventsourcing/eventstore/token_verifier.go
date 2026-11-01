@@ -325,7 +325,11 @@ func (repo *TokenVerifierRepo) getTokenIDAndSubject(ctx context.Context, accessT
 
 func (repo *TokenVerifierRepo) jwtTokenVerifier(ctx context.Context) *op.AccessTokenVerifier {
 	keySet := &openIDKeySet{repo.Query}
-	return op.NewAccessTokenVerifier(http_util.DomainContext(ctx).Origin(), keySet)
+	return op.NewAccessTokenVerifier(http_util.DomainContext(ctx).Origin(), keySet,
+		op.WithSupportedAccessTokenSigningAlgorithms(
+			string(jose.RS256), string(jose.ES256), string(jose.PS256), string(jose.EdDSA),
+		),
+	)
 }
 
 func verifyAudience(audience []string, verifierClientID, projectID string) error {
