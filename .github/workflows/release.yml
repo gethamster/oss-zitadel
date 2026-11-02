@@ -42,7 +42,7 @@ jobs:
   # as soon as it supports configuring the create release payload property make_latest to "legacy"
   # https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#create-a-release--parameters
   publish:
-    runs-on: ubuntu-22.04
+    runs-on: oss-ubuntu22-x64
     needs: version
     if: needs.version.outputs.published == 'true'
     steps:
@@ -67,7 +67,7 @@ jobs:
             });
 
   docker:
-    runs-on: ubuntu-22.04
+    runs-on: oss-ubuntu22-x64
     needs: [ version ]
     if: needs.version.outputs.published == 'true'
     steps:
@@ -142,7 +142,7 @@ jobs:
           ${{ inputs.image_name_google_login }}:${{ github.sha }}-fips
 
   homebrew-tap:
-    runs-on: ubuntu-22.04
+    runs-on: oss-ubuntu22-x64
     needs: version
     if: needs.version.outputs.published == 'true' && github.ref_name == 'v4.x'
     continue-on-error: true
@@ -162,7 +162,7 @@ jobs:
         gh workflow -R zitadel/homebrew-tap run update.yml -f runId=${RUN_ID} -f version=${VERSION}
 
   helm-chart:
-    runs-on: ubuntu-22.04
+    runs-on: oss-ubuntu22-x64
     needs: version
     if: needs.version.outputs.published == 'true' && github.ref_name == 'v4.x'
     continue-on-error: true
@@ -182,7 +182,7 @@ jobs:
           gh workflow -R zitadel/zitadel-charts run bump.yml
 
   npm-packages:
-    runs-on: ubuntu-latest
+    runs-on: oss-linux-small
     needs: version
     if: needs.version.outputs.published == 'true' && github.ref_name == 'v4.x'
     continue-on-error: true

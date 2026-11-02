@@ -10,8 +10,9 @@ on:
 
 jobs:
   add-to-project:
+    if: github.repository == 'zitadel/zitadel'
     name: Add issue and community pr to project
-    runs-on: ubuntu-latest
+    runs-on: oss-linux-small
     steps:
       - name: add issue
         uses: actions/add-to-project@v1.0.1
