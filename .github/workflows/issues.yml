@@ -10,6 +10,7 @@ on:
 
 jobs:
   add-to-project:
+    if: github.repository == 'zitadel/zitadel'
     name: Add issue and community pr to project
     runs-on: oss-linux-small
     steps:
