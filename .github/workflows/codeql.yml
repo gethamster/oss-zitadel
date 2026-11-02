@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   CodeQL-Build:
-    runs-on: ubuntu-latest
+    runs-on: oss-ubuntu24-x64
     strategy:
       fail-fast: false
       matrix:

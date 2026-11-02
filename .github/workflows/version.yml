@@ -17,7 +17,7 @@ on:
 
 jobs:
   semantic:
-    runs-on: ubuntu-22.04
+    runs-on: oss-ubuntu22-x64
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
