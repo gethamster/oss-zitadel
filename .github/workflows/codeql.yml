@@ -6,6 +6,8 @@ on:
     -  'main'
     paths-ignore:
     - 'apps/docs/content/**'
+  schedule:
+    - cron: '15 3 * * 2'
   pull_request:
     # The branches below must be a subset of the branches above
     branches:
@@ -19,15 +21,19 @@ concurrency:
 
 jobs:
   CodeQL-Build:
+    permissions:
+      contents: read
+      security-events: write
     runs-on: oss-ubuntu24-x64
     strategy:
       fail-fast: false
       matrix:
-        language: [go,javascript]
+        language: [go,javascript,actions]
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-    - name: Install Node.js
+    - if: matrix.language != 'actions'
+      name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '22'
@@ -64,6 +70,7 @@ jobs:
     # autobuild does not work anymore
     # and to be able to compile without an actual console build, we just need a placeholder in the console dist folder
     - name: Autobuild
+      if: matrix.language != 'actions'
       uses: github/codeql-action/autobuild@v3
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
