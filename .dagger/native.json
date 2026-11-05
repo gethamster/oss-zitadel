@@ -1,0 +1,1 @@
+{"schema_version":1,"checks":{"test":[["sh",".dagger/native.sh","test"]]},"build":[["sh",".dagger/native.sh","build"]],"artifacts":"dist-native"}
