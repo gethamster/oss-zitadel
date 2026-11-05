@@ -5,5 +5,7 @@
   "checks": {
     "test": "test"
   },
-  "variables_argument": "variables"
+  "variables_argument": "variables",
+  "source_argument": "source-identity",
+  "inputs_argument": "source-inputs"
 }

@@ -8,6 +8,11 @@ existing protobuf, asset, and console generation dependencies. The check keeps
 Go's race-enabled unit tests. Integration and runtime qualification remain
 separate requirements before promoting a System release.
 
+Linux recipes clone the controller's verified `source.bundle` and check its
+commit and tree before running Nx. This retains the Git metadata required by
+the existing integration package initialization, including when unit tests
+import it. Source credentials remain in the controller.
+
 The native macOS ARM64 worker uses `.dagger/native.json`. It requires Node 22,
 Corepack, a Go installation capable of selecting `go1.26.10`, and Python 3.11 or
 newer. Set the plain build variable `ZITADEL_NODE_HOME` to an operator-owned
