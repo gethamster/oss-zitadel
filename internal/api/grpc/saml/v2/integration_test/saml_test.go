@@ -25,9 +25,25 @@ import (
 	"github.com/zitadel/zitadel/pkg/grpc/session/v2"
 )
 
+// A new instance generates and projects SAML certificates on its first metadata
+// request. Wait for a usable descriptor, as we already do for projected API data.
+func waitForSAMLMetadata(t *testing.T) *saml.EntityDescriptor {
+	t.Helper()
+	var metadata *saml.EntityDescriptor
+	duration, tick := integration.WaitForAndTickWithMaxDuration(CTX, time.Minute)
+	require.EventuallyWithT(t, func(collect *assert.CollectT) {
+		var err error
+		metadata, err = Instance.GetSAMLIDPMetadata()
+		if !assert.NoError(collect, err) {
+			return
+		}
+		assert.NotEmpty(collect, metadata.IDPSSODescriptors)
+	}, duration, tick, "SAML metadata certificates were not ready")
+	return metadata
+}
+
 func TestServer_GetSAMLRequest(t *testing.T) {
-	idpMetadata, err := Instance.GetSAMLIDPMetadata()
-	require.NoError(t, err)
+	idpMetadata := waitForSAMLMetadata(t)
 
 	acsRedirect := idpMetadata.IDPSSODescriptors[0].SingleSignOnServices[0]
 	acsPost := idpMetadata.IDPSSODescriptors[0].SingleSignOnServices[1]
@@ -85,8 +101,7 @@ func TestServer_GetSAMLRequest(t *testing.T) {
 }
 
 func TestServer_CreateResponse(t *testing.T) {
-	idpMetadata, err := Instance.GetSAMLIDPMetadata()
-	require.NoError(t, err)
+	idpMetadata := waitForSAMLMetadata(t)
 	acsRedirect := idpMetadata.IDPSSODescriptors[0].SingleSignOnServices[0]
 	acsPost := idpMetadata.IDPSSODescriptors[0].SingleSignOnServices[1]
 
@@ -362,8 +377,7 @@ func TestServer_CreateResponse(t *testing.T) {
 }
 
 func TestServer_CreateResponse_Permission(t *testing.T) {
-	idpMetadata, err := Instance.GetSAMLIDPMetadata()
-	require.NoError(t, err)
+	idpMetadata := waitForSAMLMetadata(t)
 	acsRedirect := idpMetadata.IDPSSODescriptors[0].SingleSignOnServices[0]
 
 	tests := []struct {
