@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+if [ -n "${ZITADEL_NODE_HOME:-}" ]; then export PATH="$ZITADEL_NODE_HOME/bin:$PATH"; fi
 export GOTOOLCHAIN=go1.26.10 GOMAXPROCS=2 GOFLAGS=-p=2
 export NODE_OPTIONS=--max-old-space-size=4096 NX_DAEMON=false NX_NO_CLOUD=true
 export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 CYPRESS_INSTALL_BINARY=0
