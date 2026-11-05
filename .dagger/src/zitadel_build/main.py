@@ -9,12 +9,12 @@ NODE = 'node@sha256:2f0e17f8955e766e776ae16d3ac47519ca3edf47c07e5c1423527926fdd5
 
 @object_type
 class ZitadelBuild:
-    def container(self, source, platform):
+    def container(self, source_inputs, source_identity, platform):
         if platform not in {'linux/amd64', 'linux/arm64'}:
             raise ValueError('macOS uses the enrolled native worker')
         node = dag.container(platform=dagger.Platform(platform)).from_(NODE)
         return (dag.container(platform=dagger.Platform(platform)).from_(GO)
-                .with_exec(['sh', '-ec', 'apt-get update && apt-get install -y --no-install-recommends python3 && rm -rf /var/lib/apt/lists/*'])
+                .with_exec(['sh', '-ec', 'apt-get update && apt-get install -y --no-install-recommends python3 git && rm -rf /var/lib/apt/lists/*'])
                 .with_directory('/usr/local', node.directory('/usr/local'))
                 .with_exec(['corepack', 'enable', 'pnpm'])
                 .with_exec(['sh', '-ec', 'useradd --uid 1000 --create-home builder'])
@@ -30,24 +30,32 @@ class ZitadelBuild:
                 .with_mounted_cache('/cache/go-build', dag.cache_volume('zitadel-go-' + platform), owner='1000:1000')
                 .with_env_variable('GOCACHE', '/cache/go-build')
                 .with_mounted_cache('/pnpm', dag.cache_volume('zitadel-pnpm'), owner='1000:1000')
-                .with_directory('/source', source, exclude=['.git', '.artifacts', '.nx', 'node_modules'], owner='1000:1000')
-                .with_exec(['chown', '-R', '1000:1000', '/go', '/cache/go-build', '/pnpm'])
+                .with_file('/inputs/source.bundle', source_inputs.file('source.bundle'))
+                .with_exec(['git', 'clone', '--quiet', '/inputs/source.bundle', '/source'])
+                .with_exec(['python3', '-c',
+                            'import json,subprocess,sys; identity=json.loads(sys.argv[1]); '
+                            'read=lambda ref: subprocess.check_output(["git","-C","/source","rev-parse",ref],text=True).strip(); '
+                            'assert read("HEAD")==identity["commit_sha"] and read("HEAD^{tree}")==identity["tree_sha"], "Source identity differs"',
+                            source_identity])
+                .with_exec(['chown', '-R', '1000:1000', '/source', '/go', '/cache/go-build', '/pnpm'])
                 .with_user('1000:1000')
                 .with_workdir('/source')
                 .with_exec(['python3', '.dagger/prepare.py'])
                 .with_exec(['pnpm', 'install', '--frozen-lockfile', '--store-dir', '/pnpm']))
 
     @function
-    async def test(self, platform: str, source: Annotated[dagger.Directory, DefaultPath('/')], variables: str = '{}') -> str:
+    async def test(self, platform: str, source_inputs: dagger.Directory, source_identity: str,
+                   source: Annotated[dagger.Directory, DefaultPath('/')], variables: str = '{}') -> str:
         if variables != '{}':
             raise ValueError('This recipe has no build-variable overrides')
-        return await self.container(source, platform).with_exec(['pnpm', 'nx', 'run', '@zitadel/api:test-unit']).stdout()
+        return await self.container(source_inputs, source_identity, platform).with_exec(['pnpm', 'nx', 'run', '@zitadel/api:test-unit']).stdout()
 
     @function
-    def build(self, platform: str, source: Annotated[dagger.Directory, DefaultPath('/')], variables: str = '{}') -> dagger.Directory:
+    def build(self, platform: str, source_inputs: dagger.Directory, source_identity: str,
+              source: Annotated[dagger.Directory, DefaultPath('/')], variables: str = '{}') -> dagger.Directory:
         if variables != '{}':
             raise ValueError('This recipe has no build-variable overrides')
-        return (self.container(source, platform)
+        return (self.container(source_inputs, source_identity, platform)
                 .with_exec(['pnpm', 'nx', 'run', '@zitadel/api:build'])
                 .with_exec(['python3', '.dagger/package.py'])
                 .directory('/source/dist-native'))
