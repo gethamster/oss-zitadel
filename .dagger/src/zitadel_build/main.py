@@ -19,6 +19,8 @@ class ZitadelBuild:
                 .with_exec(['corepack', 'enable', 'pnpm'])
                 .with_exec(['sh', '-ec', 'useradd --uid 1000 --create-home builder'])
                 .with_env_variable('HOME', '/home/builder')
+                .with_env_variable('GOPATH', '/home/builder/go')
+                .with_env_variable('GOMODCACHE', '/go/pkg/mod')
                 .with_env_variable('PATH', '/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin')
                 .with_env_variable('GOTOOLCHAIN', 'go1.26.10').with_env_variable('GOFLAGS', '-p=2')
                 .with_env_variable('GOMAXPROCS', '2').with_env_variable('NODE_OPTIONS', '--max-old-space-size=4096')
