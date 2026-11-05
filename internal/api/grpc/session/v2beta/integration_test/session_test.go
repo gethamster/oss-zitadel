@@ -218,7 +218,7 @@ func TestServer_CreateSession(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "passkey without user error",
+			name: "discoverable passkey without user",
 			req: &session.CreateSessionRequest{
 				Challenges: &session.RequestChallenges{
 					WebAuthN: &session.RequestChallenges_WebAuthN{
@@ -227,7 +227,9 @@ func TestServer_CreateSession(t *testing.T) {
 					},
 				},
 			},
-			wantErr: true,
+			want: &session.CreateSessionResponse{
+				Details: &object.Details{ChangeDate: timestamppb.Now(), ResourceOwner: Instance.ID()},
+			},
 		},
 		{
 			name: "passkey without domain (not registered) error",
@@ -257,6 +259,12 @@ func TestServer_CreateSession(t *testing.T) {
 			}
 			require.NoError(t, err)
 			integration.AssertDetails(t, tt.want, got)
+			if tt.name == "discoverable passkey without user" {
+				options := got.GetChallenges().GetWebAuthN().GetPublicKeyCredentialRequestOptions()
+				require.NotNil(t, options)
+				require.Equal(t, "required", options.GetFields()["userVerification"].GetStringValue())
+				require.Empty(t, options.GetFields()["allowCredentials"].GetListValue().GetValues())
+			}
 		})
 	}
 }
