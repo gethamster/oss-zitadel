@@ -642,6 +642,18 @@ func (i *Instance) AddProviderToDefaultLoginPolicy(ctx context.Context, id strin
 		IdpId: id,
 	})
 	logging.OnError(err).Panic("add provider to default login policy")
+	mustAwait(func() error {
+		providers, err := i.Client.Admin.ListLoginPolicyIDPs(ctx, &admin.ListLoginPolicyIDPsRequest{})
+		if err != nil {
+			return err
+		}
+		for _, provider := range providers.GetResult() {
+			if provider.GetIdpId() == id {
+				return nil
+			}
+		}
+		return fmt.Errorf("login policy provider %s is not projected yet", id)
+	})
 }
 
 func (i *Instance) AddAzureADProvider(ctx context.Context, name string) *admin.AddAzureADProviderResponse {

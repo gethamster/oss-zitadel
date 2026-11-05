@@ -1,6 +1,7 @@
 package instrumentation
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -196,6 +197,9 @@ func Test_newTracerProvider(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.cfg.Exporter.Type == ExporterTypeGoogle {
+				t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", filepath.Join(t.TempDir(), "missing-credentials.json"))
+			}
 			got, gotErr := newTracerProvider(t.Context(), tt.cfg, resource)
 			if tt.wantErr {
 				assert.Error(t, gotErr)

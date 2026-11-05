@@ -159,6 +159,10 @@ func TestExternalNotFoundOption_ForgedRegistration_IsRejected(t *testing.T) {
 		login.QueryAuthRequestID + "=" + authRequestID + "&idpConfigID=" + idpID
 	resp := doGet(t, httpClient, selectIDPURL)
 	resp.Body.Close()
+	require.Equal(t, http.StatusFound, resp.StatusCode, "IDP selection must complete before submitting forged registration")
+	selected, err := resp.Location()
+	require.NoError(t, err)
+	require.Equal(t, "example.com", selected.Host, "selection redirects to the configured test provider")
 
 	// Step 4: the attack. POST forged "external account not found" data. Every external-* field below is
 	// attacker-controlled and, before the fix, was trusted verbatim to build the created user's identity.

@@ -1,9 +1,12 @@
 package command
 
 import (
+	"bufio"
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -2346,7 +2349,49 @@ func TestCommandSide_RemoveSMTPConfig(t *testing.T) {
 	}
 }
 
+func rejectingSMTPServer(t *testing.T) string {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = listener.Close() })
+	go func() {
+		for {
+			connection, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer connection.Close()
+				_ = connection.SetDeadline(time.Now().Add(5 * time.Second))
+				_, _ = fmt.Fprint(connection, "220 localhost ESMTP test server\r\n")
+				reader := bufio.NewReader(connection)
+				for {
+					line, err := reader.ReadString('\n')
+					if err != nil {
+						return
+					}
+					switch {
+					case strings.HasPrefix(line, "EHLO "):
+						_, _ = fmt.Fprint(connection, "250-localhost\r\n250 AUTH PLAIN LOGIN XOAUTH2\r\n")
+					case strings.HasPrefix(line, "AUTH "):
+						_, _ = fmt.Fprint(connection, "535 5.7.8 Authentication failed\r\n")
+					case strings.HasPrefix(line, "QUIT"):
+						_, _ = fmt.Fprint(connection, "221 Bye\r\n")
+						return
+					default:
+						_, _ = fmt.Fprint(connection, "530 Authentication required\r\n")
+					}
+				}
+			}()
+		}
+	}()
+	return listener.Addr().String()
+}
+
 func TestCommandSide_TestSMTPConfig(t *testing.T) {
+	smtpHost := rejectingSMTPServer(t)
 	type fields struct {
 		eventstore func(t *testing.T) *eventstore.Eventstore
 		alg        crypto.EncryptionAlgorithm
@@ -2465,7 +2510,7 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 							User:     "user",
 							Password: "password",
 						},
-						Host: "mail.smtp2go.com:2525",
+						Host: smtpHost,
 					},
 				},
 			},
@@ -2484,11 +2529,11 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 								&instance.NewAggregate("INSTANCE").Aggregate,
 								"ID",
 								"test",
-								true,
+								false,
 								"from",
 								"name",
 								"",
-								"mail.smtp2go.com:2525",
+								smtpHost,
 								"user",
 								&instance.PlainAuth{
 									Password: &crypto.CryptoValue{
@@ -2518,7 +2563,7 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 							User:     "user",
 							Password: "",
 						},
-						Host: "mail.smtp2go.com:2525",
+						Host: smtpHost,
 					},
 				},
 			},
@@ -2549,7 +2594,7 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 								ClientSecret: "client-secret",
 							},
 						},
-						Host: "mail.smtp2go.com:2525",
+						Host: smtpHost,
 					},
 				},
 			},
@@ -2568,11 +2613,11 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 								&instance.NewAggregate("INSTANCE").Aggregate,
 								"ID",
 								"test",
-								true,
+								false,
 								"from",
 								"name",
 								"",
-								"mail.smtp2go.com:2525",
+								smtpHost,
 								"user",
 								nil,
 								&instance.XOAuth2Auth{
@@ -2611,7 +2656,7 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 								ClientId: "client-id",
 							},
 						},
-						Host: "mail.smtp2go.com:2525",
+						Host: smtpHost,
 					},
 				},
 			},
@@ -2638,6 +2683,7 @@ func TestCommandSide_TestSMTPConfig(t *testing.T) {
 }
 
 func TestCommandSide_TestSMTPConfigById(t *testing.T) {
+	smtpHost := rejectingSMTPServer(t)
 	type fields struct {
 		eventstore *eventstore.Eventstore
 		alg        crypto.EncryptionAlgorithm
@@ -2717,11 +2763,11 @@ func TestCommandSide_TestSMTPConfigById(t *testing.T) {
 								&instance.NewAggregate("INSTANCE").Aggregate,
 								"ID",
 								"test",
-								true,
+								false,
 								"from",
 								"name",
 								"",
-								"mail.smtp2go.com:2525",
+								smtpHost,
 								"user",
 								&instance.PlainAuth{
 									Password: &crypto.CryptoValue{
@@ -2760,11 +2806,11 @@ func TestCommandSide_TestSMTPConfigById(t *testing.T) {
 								&instance.NewAggregate("INSTANCE").Aggregate,
 								"ID",
 								"test",
-								true,
+								false,
 								"from",
 								"name",
 								"",
-								"mail.smtp2go.com:2525",
+								smtpHost,
 								"user",
 								nil,
 								&instance.XOAuth2Auth{

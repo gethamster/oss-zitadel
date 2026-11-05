@@ -51,6 +51,12 @@ jobs:
         uses: docker/setup-compose-action@v1
         with:
           version: v2.38.2
+      - name: Install browser test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 \
+            libasound2 libxtst6 xauth xvfb
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Set SHAs for nx affected commands
