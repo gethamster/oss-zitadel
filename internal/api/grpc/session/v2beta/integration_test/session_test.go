@@ -262,8 +262,10 @@ func TestServer_CreateSession(t *testing.T) {
 			if tt.name == "discoverable passkey without user" {
 				options := got.GetChallenges().GetWebAuthN().GetPublicKeyCredentialRequestOptions()
 				require.NotNil(t, options)
-				require.Equal(t, "required", options.GetFields()["userVerification"].GetStringValue())
-				require.Empty(t, options.GetFields()["allowCredentials"].GetListValue().GetValues())
+				publicKey := options.GetFields()["publicKey"].GetStructValue()
+				require.NotNil(t, publicKey)
+				require.Equal(t, "required", publicKey.GetFields()["userVerification"].GetStringValue())
+				require.Empty(t, publicKey.GetFields()["allowCredentials"].GetListValue().GetValues())
 			}
 		})
 	}
