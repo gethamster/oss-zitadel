@@ -26,6 +26,7 @@ class ZitadelBuild:
                 .with_mounted_cache('/pnpm', dag.cache_volume('zitadel-pnpm'))
                 .with_directory('/source', source, exclude=['.git', '.artifacts', '.nx', 'node_modules'])
                 .with_workdir('/source')
+                .with_exec(['python3', '.dagger/prepare.py'])
                 .with_exec(['corepack', 'enable'])
                 .with_exec(['pnpm', 'install', '--frozen-lockfile', '--store-dir', '/pnpm']))
 

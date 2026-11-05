@@ -1,6 +1,8 @@
 # Managed API releases
 
-The managed Dagger controller runs the existing `@zitadel/api:test-unit` and
+This System-native recipe preserves the reviewed loopback-only API listener
+patch without changing the source checkout or normal upstream releases. The
+managed Dagger controller runs the existing `@zitadel/api:test-unit` and
 `@zitadel/api:build` targets with the pinned Go and Node images. Nx retains the
 existing protobuf, asset, and console generation dependencies. The check keeps
 Go's race-enabled unit tests. Integration and runtime qualification remain

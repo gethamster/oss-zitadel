@@ -28,7 +28,7 @@ def package():
                     bundle.addfile(info, stream)
     with archive.open('rb') as stream:
         digest = hashlib.file_digest(stream, 'sha256').hexdigest()
-    (output / 'component.json').write_text(json.dumps({'schema_version': 1, 'component': 'zitadel', 'platform': platform,
+    (output / 'component.json').write_text(json.dumps({'schema_version': 1, 'component': 'zitadel', 'platform': platform, 'loopbackOnly': True,
         'archive': archive.name, 'sha256': digest, 'bytes': archive.stat().st_size}, sort_keys=True) + '\n')
 
 
