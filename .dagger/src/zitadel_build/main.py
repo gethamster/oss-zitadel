@@ -29,7 +29,7 @@ class ZitadelBuild:
                 .with_env_variable('GOCACHE', '/cache/go-build')
                 .with_mounted_cache('/pnpm', dag.cache_volume('zitadel-pnpm'), owner='1000:1000')
                 .with_directory('/source', source, exclude=['.git', '.artifacts', '.nx', 'node_modules'], owner='1000:1000')
-                .with_exec(['chown', '-R', '1000:1000', '/go/pkg/mod', '/cache/go-build', '/pnpm'])
+                .with_exec(['chown', '-R', '1000:1000', '/go', '/cache/go-build', '/pnpm'])
                 .with_user('1000:1000')
                 .with_workdir('/source')
                 .with_exec(['python3', '.dagger/prepare.py'])
