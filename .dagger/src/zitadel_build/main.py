@@ -14,7 +14,7 @@ class ZitadelBuild:
             raise ValueError('macOS uses the enrolled native worker')
         node = dag.container(platform=dagger.Platform(platform)).from_(NODE)
         return (dag.container(platform=dagger.Platform(platform)).from_(GO)
-                .with_exec(['sh', '-ec', 'apt-get update && apt-get install -y --no-install-recommends python3 git && rm -rf /var/lib/apt/lists/*'])
+                .with_exec(['sh', '-ec', 'apt-get update && apt-get install -y --no-install-recommends python3 git unzip && rm -rf /var/lib/apt/lists/*'])
                 .with_directory('/usr/local', node.directory('/usr/local'))
                 .with_exec(['corepack', 'enable', 'pnpm'])
                 .with_exec(['sh', '-ec', 'useradd --uid 1000 --create-home builder'])
