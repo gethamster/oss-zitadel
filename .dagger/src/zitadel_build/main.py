@@ -24,6 +24,7 @@ class ZitadelBuild:
                 .with_env_variable('PATH', '/usr/local/go/bin:/usr/local/bin:/usr/bin:/bin')
                 .with_env_variable('GOTOOLCHAIN', 'go1.26.10')
                 .with_env_variable('NODE_OPTIONS', '--max-old-space-size=4096')
+                .with_env_variable('NODE_USE_ENV_PROXY', '1')
                 .with_env_variable('PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD', '1').with_env_variable('CYPRESS_INSTALL_BINARY', '0')
                 .with_env_variable('NX_DAEMON', 'false').with_env_variable('NX_NO_CLOUD', 'true')
                 .with_mounted_cache('/go/pkg/mod', dag.cache_volume('zitadel-go-modules'), owner='1000:1000')
