@@ -66,7 +66,7 @@
     "@angular/build": "^21.2.24",
     "@angular/cli": "^21.2.24",
     "@angular/compiler-cli": "^21.2.24",
-    "@angular/language-service": "^21.2.24",
+    "@angular/language-service": "^22.2.3",
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.3.0",
     "@types/file-saver": "^2.0.7",
