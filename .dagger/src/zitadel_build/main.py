@@ -29,6 +29,8 @@ class ZitadelBuild:
                 .with_mounted_cache('/go/pkg/mod', dag.cache_volume('zitadel-go-modules'), owner='1000:1000')
                 .with_mounted_cache('/cache/go-build', dag.cache_volume('zitadel-go-' + platform), owner='1000:1000')
                 .with_env_variable('GOCACHE', '/cache/go-build')
+                .with_mounted_cache('/cache/nx', dag.cache_volume('zitadel-nx-' + platform), owner='1000:1000')
+                .with_env_variable('NX_CACHE_DIRECTORY', '/cache/nx')
                 .with_mounted_cache('/pnpm', dag.cache_volume('zitadel-pnpm'), owner='1000:1000')
                 .with_file('/inputs/source.bundle', source_inputs.file('source.bundle'))
                 .with_exec(['git', 'clone', '--quiet', '/inputs/source.bundle', '/source'])
