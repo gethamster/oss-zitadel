@@ -36,7 +36,7 @@
     "@netlify/build-info": "^10.5.1",
     "@ng-icons/core": "^33.2.2",
     "@ng-icons/heroicons": "^33.2.2",
-    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/core": "^18.1.0",
     "@tanstack/angular-query-experimental": "^5.100.11",
     "angular-oauth2-oidc": "^20.0.2",
     "angularx-qrcode": "^21.0.5",
