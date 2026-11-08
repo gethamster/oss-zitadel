@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
@@ -87,19 +88,24 @@ func (t *Translator) AddMessages(tag language.Tag, messages ...Message) error {
 }
 
 func (t *Translator) LocalizeFromRequest(r *http.Request, id string, args map[string]interface{}) string {
-	return localize(t.localizerFromRequest(r), id, args)
+	return localize(t.localizerFromRequest(r), id, args, false)
 }
 
 func (t *Translator) LocalizeFromCtx(ctx context.Context, id string, args map[string]interface{}) string {
-	return localize(t.localizerFromCtx(ctx), id, args)
+	return localize(t.localizerFromCtx(ctx), id, args, false)
 }
 
 func (t *Translator) Localize(id string, args map[string]interface{}, langs ...string) string {
-	return localize(t.localizer(langs...), id, args)
+	return localize(t.localizer(langs...), id, args, false)
+}
+
+// LocalizeOptional returns an empty string when an optional message is unavailable.
+func (t *Translator) LocalizeOptional(id string, args map[string]interface{}, langs ...string) string {
+	return localize(t.localizer(langs...), id, args, true)
 }
 
 func (t *Translator) LocalizeWithoutArgs(id string, langs ...string) string {
-	return localize(t.localizer(langs...), id, map[string]interface{}{})
+	return t.Localize(id, map[string]interface{}{}, langs...)
 }
 
 func (t *Translator) Lang(r *http.Request) language.Tag {
@@ -160,14 +166,21 @@ func getAcceptLanguageHeader(ctx context.Context) string {
 	return metautils.ExtractIncoming(ctx).Get("grpcgateway-accept-language")
 }
 
-func localize(localizer *i18n.Localizer, id string, args map[string]interface{}) string {
+func localize(localizer *i18n.Localizer, id string, args map[string]interface{}, optional bool) string {
 	s, err := localizer.Localize(&i18n.LocalizeConfig{
 		MessageID:    id,
 		TemplateData: args,
 	})
-	if err != nil {
-		logging.WithFields("id", id, "args", args).WithError(err).Warnf("missing translation")
-		return id
+	if err == nil {
+		return s
 	}
-	return s
+	var missing *i18n.MessageNotFoundErr
+	if !optional || !errors.As(err, &missing) {
+		// Template data and rendering errors can contain verification codes.
+		logging.WithFields("id", id).Warn("translation failed")
+	}
+	if optional {
+		return ""
+	}
+	return id
 }
